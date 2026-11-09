@@ -48,3 +48,14 @@ The application uses a simple data model with meaningful identifiers:
    - Grade level
 
 All data is stored in memory, which means data will be reset when the server restarts.
+
+## Running tests
+
+From the repository root:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests -v
+```
+
+The signup regression tests use an isolated in-memory MongoDB test double; no running MongoDB server is required.
