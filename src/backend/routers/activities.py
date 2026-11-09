@@ -84,13 +84,24 @@ def signup_for_activity(activity_name: str, email: str, teacher_username: Option
         raise HTTPException(
             status_code=400, detail="Already signed up for this activity")
 
-    # Add student to participants
+    # Check capacity in the update so concurrent signups cannot overfill it.
     result = activities_collection.update_one(
-        {"_id": activity_name},
+        {
+            "_id": activity_name,
+            "$expr": {
+                "$lt": [{"$size": "$participants"}, "$max_participants"]
+            }
+        },
         {"$push": {"participants": email}}
     )
 
     if result.modified_count == 0:
+        current_activity = activities_collection.find_one({"_id": activity_name})
+        if (
+            current_activity
+            and len(current_activity["participants"]) >= current_activity["max_participants"]
+        ):
+            raise HTTPException(status_code=400, detail="Activity is full")
         raise HTTPException(status_code=500, detail="Failed to update activity")
     
     return {"message": f"Signed up {email} for {activity_name}"}
